@@ -10,13 +10,13 @@ def single_run(dev_d: Dict[str, List[Union[str, int]]],
                train_d: Dict[str, List[Union[str, int]]],
                test_d: Dict[str, List[Union[str, int]]]):
     # TODO: once you have completed the model.py, you can run this function to train and evaluate your model, and visualize the training process with a plot
-    train_config = EasyDict({
+    train_config = EasyDict({ 
         'batch_size': 64,  # we use batching for
         'lr': 0.025,  # learning rate
         'num_epochs': 20,  # the total number of times all the training data is iterated over
         'save_path': 'model.pth',  # path where to save the model
         'embeddings': EMBEDDING_TYPES[0],
-        'num_classes': 2,
+        'num_classes': 2, 
     })
 
     epoch_train_losses, _, epoch_dev_loss, epoch_dev_accs, _, _ = run(train_config, dev_d, train_d, test_d)
@@ -53,12 +53,12 @@ if __name__ == '__main__':
 
     # load raw data
     # uncomment the following line to run
-    # dev_data, train_data, test_data = load_data()
+    dev_data, train_data, test_data = load_data()
 
     # Run a single training run
     # uncomment the following line to run
-    # single_run(dev_data, train_data, test_data)
+    single_run(dev_data, train_data, test_data)
 
     # Explore different embeddings
     # uncomment the following line to run
-    # explore_embeddings(dev_data, train_data, test_data)
+    explore_embeddings(dev_data, train_data, test_data)

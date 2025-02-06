@@ -75,15 +75,11 @@ def featurize(sentence: str, embeddings: gensim.models.keyedvectors.KeyedVectors
     # Hint: follow the hints in the pdf description
     # print("Number of Tokens: ", len(word_tokenize(sentence.lower())))
 
-    # Return None if no valid word embeddings are found
-    if not vectors:
-        return None
-
     # Convert list of vectors to a PyTorch tensor
-    torch_vectors = torch.tensor(vectors, dtype=torch.float32)
+    vectors = torch.from_numpy(np.array(vectors, dtype=np.float32))
 
     # Return the average embedding
-    return torch_vectors.mean(dim=0)
+    return vectors.mean(dim=0)
 
 
 def create_tensor_dataset(raw_data: Dict[str, List[Union[int, str]]],
@@ -164,12 +160,12 @@ def accuracy(logits: torch.FloatTensor, labels: torch.LongTensor) -> torch.Float
     # logits is a tensor of shape (batch_size, num_classes)
 
     # Get the predicted class with argmax of logits
-    predictions = logits.argmax(dim=1)
+    predictions = torch.argmax(logits, dim=1)
 
     # Compare predictions with the true labels
-    pred_correct = (predictions == labels).float()
+    pred_correct = (predictions == labels)
 
-    return pred_correct.mean()  # return mean of correct predictions
+    return pred_correct
     
 
 
