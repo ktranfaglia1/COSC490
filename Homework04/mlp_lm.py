@@ -306,6 +306,10 @@ def generate_text(prompt, model, tokenizer, local_window_size, top_p, max_len=30
         # select the tokens in the window
         new_input = torch.tensor(tokenized_prompt_ids[-local_window_size:])
 
+        # If new_input is a tensor of shape [6], reshape it to [1, 6]
+        if len(new_input.shape) == 1:
+            new_input = new_input.unsqueeze(0)  # Add batch dimension
+
         # compute model output
         output = model(new_input)
 
