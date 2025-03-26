@@ -40,7 +40,9 @@ class CausalSelfAttention(nn.Module):
         #   The matrix should has 1s in the lower left triangular part (including the diagonal) and 0s in the upper right.
         #   Name the matrix `causal_mask` and then expand the mask for the batch and head dimensions
         
-
+        mask = torch.tril(torch.ones(config.block_size, config.block_size))
+        # Convert to a binary mask (0s and 1s)
+        casual_mask = mask.view(1, 1, config.block_size, config.block_size)
 
         # your code ends here
         
@@ -54,8 +56,36 @@ class CausalSelfAttention(nn.Module):
         B, T, C = x.size() # batch size, sequence length, embedding dimensionality (n_embd)
 
         # TODO: implement the forward pass of the casual self-attention layer.
-        
 
+        # Calculate query, key, values for all the heads in batch
+        q, k, v = self.c_attn(x).split(self.n_embd, dim=2)
+        
+        # Reshape q, k, v for multi-head attention and make them contiguous (B, T, C) -> (B, nh, T, hs)
+        head_size = self.n_embd // self.n_head
+        k = k.view(B, T, self.n_head, head_size).transpose(1, 2) 
+        q = q.view(B, T, self.n_head, head_size).transpose(1, 2) 
+        v = v.view(B, T, self.n_head, head_size).transpose(1, 2)
+        
+        # Compute attention scores (affinities) (B, nh, T, hs) @ (B, nh, hs, T) -> (B, nh, T, T)
+        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        
+        # Apply the causal mask to the attention scores (only use the portion relevant to this sequence length)
+        mask = self.causal_mask[:, :, :T, :T]
+        att = att.masked_fill(mask == 0, float('-inf'))
+        
+        # Softmax to get attention probabilities, then apply dropout
+        att = F.softmax(att, dim=-1)
+        att = self.attn_dropout(att)
+        
+        # Apply attention to values (B, nh, T, T) @ (B, nh, T, hs) -> (B, nh, T, hs)
+        y = att @ v
+        
+        # Reshape back: (B, nh, T, hs) -> (B, T, C)
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
+        
+        # Output projection and dropout
+        y = self.resid_dropout(self.c_proj(y))
+        
         return y
 
 class Block(nn.Module):
